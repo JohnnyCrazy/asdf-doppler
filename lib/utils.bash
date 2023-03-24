@@ -38,7 +38,7 @@ download_release() {
   version="$1"
   filename="$2"
 
-  url="$GH_REPO/releases/download/${version}/doppler_${version}_linux_amd64.tar.gz"
+  url="$(get_download_url "$version")"
 
   echo "* Downloading $TOOL_NAME release $version..."
   curl "${curl_opts[@]}" -o "$filename" -C - "$url" || fail "Could not download $url"
@@ -66,4 +66,32 @@ install_version() {
     rm -rf "$install_path"
     fail "An error occurred while installing $TOOL_NAME $version."
   )
+}
+
+get_arch() {
+  uname | tr '[:upper:]' '[:lower:]'
+}
+
+get_cpu() {
+  local machine_hardware_name
+  machine_hardware_name=${ASDF_KUBECTL_OVERWRITE_ARCH:-"$(uname -m)"}
+
+  case "$machine_hardware_name" in
+  'x86_64') local cpu_type="amd64" ;;
+  'powerpc64le' | 'ppc64le') local cpu_type="ppc64le" ;;
+  'aarch64') local cpu_type="arm64" ;;
+  'armv7l') local cpu_type="arm" ;;
+  *) local cpu_type="$machine_hardware_name" ;;
+  esac
+
+  echo "$cpu_type"
+}
+
+get_download_url() {
+  local version="$1"
+  local platform
+  platform="$(get_arch)"
+  local cpu
+  cpu=$(get_cpu)
+  echo "$GH_REPO/releases/download/${version}/doppler_${version}_${platform}_${cpu}.tar.gz"
 }
