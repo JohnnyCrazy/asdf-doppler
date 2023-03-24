@@ -69,7 +69,15 @@ install_version() {
 }
 
 get_arch() {
-  uname | tr '[:upper:]' '[:lower:]'
+  local arch_raw
+  arch_raw="$(uname | tr '[:upper:]' '[:lower:]')"
+
+  case "$arch_raw" in
+  'darwin') local arch="macOS" ;;
+  *) local arch="$arch_raw" ;;
+  esac
+
+  echo "$arch"
 }
 
 get_cpu() {
